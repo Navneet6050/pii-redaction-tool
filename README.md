@@ -76,11 +76,12 @@ Post-Redaction Leakage Scan (Re-opening redacted DOCX to verify zero residual PI
 
 ```bash
 # 1. Create and activate virtual environment
+# Windows (PowerShell / CMD):
 python -m venv .venv
-
-# Windows:
 .venv\Scripts\activate
-# Linux/macOS:
+
+# Linux / macOS (bash / zsh):
+# python -m venv .venv
 # source .venv/bin/activate
 
 # 2. Install dependencies
@@ -94,24 +95,16 @@ python -m spacy download en_core_web_sm
 
 ## Usage
 
+Commands are formatted for cross-platform compatibility across Windows PowerShell, Command Prompt, and Linux/macOS shells:
+
 ### 1. Document Redaction (Domain-Assisted Mode for RHP Prospectus)
 ```bash
-python pii_redactor.py \
-  --input "Red Herring Prospectus.docx" \
-  --output "Red Herring Prospectus_redacted.docx" \
-  --use-domain-profile \
-  --seed 42 \
-  --validate \
-  --strict
+python pii_redactor.py --input "Red Herring Prospectus.docx" --output "Red Herring Prospectus_redacted.docx" --use-domain-profile --seed 42 --validate --strict
 ```
 
 ### 2. Document Redaction (Pure Generic Mode)
 ```bash
-python pii_redactor.py \
-  --input "Red Herring Prospectus.docx" \
-  --output "Red Herring Prospectus_redacted.docx" \
-  --seed 42 \
-  --validate
+python pii_redactor.py --input "Red Herring Prospectus.docx" --output "Red Herring Prospectus_redacted.docx" --seed 42 --validate
 ```
 
 ### 3. Run Quantitative Evaluation
@@ -128,9 +121,9 @@ python -m unittest discover tests -v
 
 ## Evaluation Results
 
-Empirical results measured against the 633 annotated occurrences in `Red Herring Prospectus.docx` and the 392-case independent synthetic benchmark:
+Empirical results measured against the 633 annotated occurrences in `Red Herring Prospectus.docx` and the 392-case independent three-tier synthetic benchmark:
 
-### Real-Document Evaluation (`Red Herring Prospectus.docx`)
+### Real-Document Evaluation (`Red Herring Prospectus.docx`, Support = 633)
 
 | Metric | Generic Mode (Default) | Domain-Assisted Mode (`--use-domain-profile`) |
 | :--- | :---: | :---: |
@@ -141,12 +134,25 @@ Empirical results measured against the 633 annotated occurrences in `Red Herring
 | **Macro Recall** | **92.18%** | **94.54%** |
 | **Macro F1-Score** | **95.26%** | **96.66%** |
 
+#### Real-Document Per-Category Breakdown
+| Category | Generic Precision | Generic Recall | Generic F1 | Domain Precision | Domain Recall | Domain F1 | Support |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **FULL_NAME** | 100.00% | 73.18% | **84.51%** | 100.00% | 92.19% | **95.93%** | 384 |
+| **EMAIL_ADDRESS** | 100.00% | 100.00% | **100.00%** | 100.00% | 100.00% | **100.00%** | 70 |
+| **PHONE_NUMBER** | 100.00% | 58.70% | **73.97%** | 100.00% | 58.70% | **73.97%** | 46 |
+| **COMPANY_NAME** | 100.00% | 97.74% | **98.86%** | 100.00% | 100.00% | **100.00%** | 133 |
+| **PHYSICAL_ADDRESS** | 100.00% | 100.00% | **100.00%** | 100.00% | 100.00% | **100.00%** | 0 |
+| **SSN** | 100.00% | 100.00% | **100.00%** | 100.00% | 100.00% | **100.00%** | 0 |
+| **CREDIT_CARD** | 100.00% | 100.00% | **100.00%** | 100.00% | 100.00% | **100.00%** | 0 |
+| **DATE_OF_BIRTH** | 100.00% | 100.00% | **100.00%** | 100.00% | 100.00% | **100.00%** | 0 |
+| **IP_ADDRESS** | 100.00% | 100.00% | **100.00%** | 100.00% | 100.00% | **100.00%** | 0 |
+
 ### Synthetic Benchmark Evaluation (360 Clean Cases + 32 Adversarial Cases)
 
 | Benchmark Set | Total Support | Metric Result | Notes |
 | :--- | :---: | :---: | :--- |
-| **Synthetic Positive Recall** | 180 | **98.33%** (177 / 180 TP) | Evaluates multi-format generalization across all 9 PII types. |
-| **Synthetic Clear-Negative Specificity** | 180 | **80.00%** (144 / 180 TN) | Evaluates non-PII text with zero structural PII resemblance. |
+| **Synthetic Positive Recall** | 180 | **98.33%** (177 / 180 TP) | Evaluates multi-format generalization across all 9 PII types (20 per category). |
+| **Synthetic Clear-Negative Specificity** | 180 | **80.00%** (144 / 180 TN) | Evaluates non-PII text with zero structural PII resemblance (20 per category). |
 | **Adversarial / Ambiguous Cases** | 32 | Stress-test tracked | Non-Luhn cards: 75% blocked; partial addresses: 62.5% blocked. |
 | **Post-Redaction Leakage Scan** | — | **PASS (0 Leaks)** | Verified across paragraphs, tables, headers, footers, text boxes. |
 | **Automated Unit Test Suite** | 94 tests | **94 / 94 PASS (100%)** | Comprehensive functional, regression, and privacy test coverage. |
@@ -166,7 +172,7 @@ Empirical results measured against the 633 annotated occurrences in `Red Herring
 ## Phone Ground-Truth Annotation Limitation
 
 An occurrence-level audit of the 19 reported `PHONE_NUMBER` false negatives revealed:
-- **Root Cause**: The frozen `ground_truth.json` contains 19 split/truncated annotations representing partial fragments (e.g. `+91 22 2288` as an 8-character prefix, or `2460` as a 4-digit suffix) of complete 12-digit Indian landline telephone strings (`+91 22 2288 2460`).
+- **Root Cause**: The reference `ground_truth.json` contains 19 split/truncated annotations representing partial fragments (e.g. `+91 22 2288` as an 8-character prefix, or `2460` as a 4-digit suffix) of complete 12-digit Indian landline telephone strings (`+91 22 2288 2460`).
 - **Complete Phone Coverage**: All 27 complete telephone numbers in the document were detected with **100% precision and recall (27 / 27 TP)**.
 - **Preserved Precision Safeguard**: The detector was intentionally not loosened to classify arbitrary 4-to-6 digit numbers as telephone entities, as doing so would cause severe false-positive regressions on financial figures, accounting dates, and section indices.
 - **Ground-Truth Integrity**: The reference ground truth was preserved without alteration.
@@ -183,8 +189,11 @@ An occurrence-level audit of the 19 reported `PHONE_NUMBER` false negatives reve
 
 ---
 
-## Privacy & Security Hardening
+## Privacy, Security & Repository Governance
 
+- **Unredacted Document Exclusion**: The original unredacted `Red Herring Prospectus.docx` contains sensitive real-world PII and is explicitly **excluded from the public repository** via `.gitignore` for privacy compliance.
+- **Internal Evaluation Artifacts**: The ground-truth dataset (`ground_truth.json`) and run-time audit records (`redaction_report.json`) contain original PII references used strictly for local offline evaluation. They are designated as internal/local artifacts and are **not tracked in the public git repository**.
+- **Public Repository Scope**: The public repository publishes only the sanitized source code, automated test suite, synthetic benchmarks, quantitative evaluation reports, and the verified redacted document (`Red Herring Prospectus_redacted.docx`).
 - **Zero Raw PII in Audit Logs**: Generated `redaction_report.json` and console logs record anonymized audit descriptors (`FULL_NAME_0001`, `EMAIL_ADDRESS_0002`) without persisting sensitive raw values.
 - **In-Memory Mapping Isolation**: Deterministic replacement tables exist strictly in process memory during execution.
 - **Leakage Gate**: Strict CLI execution (`--strict`) automatically aborts and exits with a non-zero code if any residual PII is discovered during post-redaction verification.
@@ -199,28 +208,34 @@ PII_Redaction_Tool/
 ├── requirements.txt                    # Pinned runtime dependencies
 ├── pii_redactor.py                     # Main CLI, detection pipeline, anonymizer, and docx redactor
 ├── evaluate_redactor.py                # Dual-mode real-document and synthetic evaluation suite
-├── ground_truth.json                   # Reference ground-truth annotations for RHP evaluation
-├── Red Herring Prospectus.docx          # Source legal prospectus document
-├── Red Herring Prospectus_redacted.docx # Generated redacted DOCX deliverable
+├── Red Herring Prospectus_redacted.docx # Verified redacted DOCX deliverable (public)
 ├── evaluation/
 │   ├── evaluation_report.md            # Standalone quantitative evaluation report
 │   ├── metrics.json                    # Detailed machine-readable evaluation metrics
 │   └── synthetic_benchmark.py          # Three-tier independent synthetic benchmark suite
-└── tests/
-    ├── test_anonymization.py           # Unit tests for deterministic pseudonymization engine
-    ├── test_detector.py                # Unit tests for multi-stage PII detection pipeline
-    ├── test_docx_integrity.py          # Unit tests for run-aware styling and XML preservation
-    ├── test_email.py                   # Unit tests for email pattern matching
-    ├── test_entity_resolution.py       # Unit tests for priority-first overlap resolution
-    ├── test_evaluation.py              # Unit tests for evaluation calculation and privacy exports
-    ├── test_generalization.py          # Zero-shot generalization tests across unseen PII formats
-    ├── test_ip.py                      # Unit tests for IPv4/IPv6 validation
-    ├── test_leakage_validation.py      # Unit tests for independent post-redaction leakage scanner
-    ├── test_name.py                    # Unit tests for Western and Indian person name detection
-    ├── test_phone.py                   # Unit tests for domestic/international phone numbers
-    ├── test_privacy.py                 # Unit tests for zero raw PII log/report sanitization
-    ├── test_regression.py              # Unit tests for regression protection against financial terms
-    ├── test_regression_targeted.py     # Unit tests for targeted fixes (Credit Card, Names, DOB)
-    ├── test_smoke.py                   # End-to-end integration smoke test
-    └── test_ssn.py                     # Unit tests for SSN pattern matching
+├── tests/
+│   ├── test_address.py                 # Unit tests for physical address patterns
+│   ├── test_anonymization.py           # Unit tests for deterministic pseudonymization engine
+│   ├── test_company.py                 # Unit tests for company name detection & exclusions
+│   ├── test_credit_card.py             # Unit tests for credit card detection & Luhn validation
+│   ├── test_detector.py                # Unit tests for multi-stage PII detection pipeline
+│   ├── test_dob.py                     # Unit tests for date of birth contextual detection
+│   ├── test_docx_integrity.py          # Unit tests for run-aware styling and XML preservation
+│   ├── test_email.py                   # Unit tests for email pattern matching
+│   ├── test_entity_resolution.py       # Unit tests for priority-first overlap resolution
+│   ├── test_evaluation.py              # Unit tests for evaluation calculation and privacy exports
+│   ├── test_generalization.py          # Zero-shot generalization tests across unseen PII formats
+│   ├── test_ip.py                      # Unit tests for IPv4/IPv6 validation
+│   ├── test_leakage_validation.py      # Unit tests for independent post-redaction leakage scanner
+│   ├── test_name.py                    # Unit tests for Western and Indian person name detection
+│   ├── test_phone.py                   # Unit tests for domestic/international phone numbers
+│   ├── test_privacy.py                 # Unit tests for zero raw PII log/report sanitization
+│   ├── test_regression.py              # Unit tests for regression protection against financial terms
+│   ├── test_regression_targeted.py     # Unit tests for targeted fixes (Credit Card, Names, DOB)
+│   ├── test_smoke.py                   # End-to-end integration smoke test
+│   └── test_ssn.py                     # Unit tests for SSN pattern matching
+└── [Local Evaluation Artifacts — Excluded from Public Repo via .gitignore]:
+    ├── Red Herring Prospectus.docx     # Original unredacted prospectus (contains PII)
+    ├── ground_truth.json               # Reference ground-truth annotations (contains PII)
+    └── redaction_report.json           # Local run-time audit report
 ```
