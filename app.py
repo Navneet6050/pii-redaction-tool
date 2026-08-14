@@ -10,16 +10,18 @@ Exposes:
 ===============================================================================
 """
 
-import io
 import logging
+import os
+import shutil
 import sys
+import tempfile
+import zipfile
 from contextlib import asynccontextmanager
 from typing import Optional
 
-import docx
 from docx.opc.exceptions import PackageNotFoundError
-from fastapi import FastAPI, File, UploadFile, Query, HTTPException, status
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, File, UploadFile, Query, HTTPException, BackgroundTasks, status
+from fastapi.responses import FileResponse
 
 from pii_redactor import (
     PIIDetector,
@@ -29,7 +31,7 @@ from pii_redactor import (
     __version__
 )
 
-# Configure sanitized logging (no PII logged)
+# Configure sanitized logging (zero raw PII logged)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -37,22 +39,29 @@ logging.basicConfig(
 )
 logger = logging.getLogger("PIIRedactionAPI")
 
-# Global pre-warmed detector singletons
+# Global detector singletons (generic pre-warmed, domain lazily instantiated)
 _generic_detector: Optional[PIIDetector] = None
 _domain_detector: Optional[PIIDetector] = None
 
 
+def cleanup_temp_files(*file_paths: str):
+    """Safely removes temporary files from disk post-response."""
+    for path in file_paths:
+        try:
+            if path and os.path.exists(path):
+                os.remove(path)
+        except Exception as e:
+            logger.warning(f"Failed to remove temporary file {path}: {type(e).__name__}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Pre-warm NLP models at application startup to minimize per-request latency."""
+    """Pre-warm generic NLP model at application startup to minimize memory and latency."""
     global _generic_detector, _domain_detector
-    logger.info("Initializing pre-warmed PII Detector models...")
+    logger.info("Pre-warming generic PII Detector model...")
     _generic_detector = PIIDetector(method="hybrid", domain_profile=None)
-    _domain_detector = PIIDetector(
-        method="hybrid",
-        domain_profile=DomainProfile.get_rhp_default_profile()
-    )
-    logger.info("PII Detector models ready.")
+    _domain_detector = None
+    logger.info("Generic PII Detector model ready.")
     yield
     logger.info("Shutting down PII Redaction API.")
 
@@ -96,6 +105,7 @@ async def health_check():
     }
 )
 async def redact_docx(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(..., description="Microsoft Word document (.docx) to redact"),
     use_domain_profile: bool = Query(
         False,
@@ -108,7 +118,7 @@ async def redact_docx(
 ):
     """
     Accepts a DOCX file upload, processes it using the PII Redactor engine,
-    and streams the redacted DOCX file back in-memory.
+    and streams the redacted DOCX file back via disk-backed temporary storage.
     """
     # 1. Validate filename and extension
     filename = file.filename or ""
@@ -118,66 +128,83 @@ async def redact_docx(
             detail="Invalid file format. Only Microsoft Word (.docx) documents are supported."
         )
 
-    # 2. Read file bytes into memory
-    try:
-        file_bytes = await file.read()
-    except Exception as e:
-        logger.error(f"Failed to read uploaded file: {type(e).__name__}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to read the uploaded file stream."
-        )
+    # 2. Stream uploaded file directly to a temporary input file on disk
+    temp_in = tempfile.NamedTemporaryFile(delete=False, suffix=".docx")
+    temp_in_path = temp_in.name
+    temp_out = tempfile.NamedTemporaryFile(delete=False, suffix=".docx")
+    temp_out_path = temp_out.name
 
-    if not file_bytes:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The uploaded file is empty."
-        )
-
-    # 3. Validate DOCX XML package integrity
-    in_stream = io.BytesIO(file_bytes)
     try:
-        _ = docx.Document(in_stream)
-        in_stream.seek(0)
-    except (PackageNotFoundError, Exception) as e:
-        logger.warning(f"Malformed DOCX package rejected: {type(e).__name__}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The uploaded file is not a valid or readable .docx package."
-        )
+        try:
+            # Stream in 64KB chunks to prevent holding complete file bytes in memory
+            while chunk := await file.read(1024 * 64):
+                temp_in.write(chunk)
+        finally:
+            temp_in.close()
+            temp_out.close()
 
-    # 4. Select pre-warmed detector and initialize redactor
-    try:
+        # Check for empty file upload
+        if os.path.getsize(temp_in_path) == 0:
+            cleanup_temp_files(temp_in_path, temp_out_path)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The uploaded file is empty."
+            )
+
+        # 3. Select detector (generic pre-warmed, domain lazily instantiated)
         global _generic_detector, _domain_detector
         if use_domain_profile:
-            detector = _domain_detector or PIIDetector(
-                method="hybrid",
-                domain_profile=DomainProfile.get_rhp_default_profile()
-            )
+            if _domain_detector is None:
+                logger.info("Lazily instantiating domain-assisted PII Detector...")
+                _domain_detector = PIIDetector(
+                    method="hybrid",
+                    domain_profile=DomainProfile.get_rhp_default_profile()
+                )
+            detector = _domain_detector
         else:
-            detector = _generic_detector or PIIDetector(method="hybrid", domain_profile=None)
+            if _generic_detector is None:
+                _generic_detector = PIIDetector(method="hybrid", domain_profile=None)
+            detector = _generic_detector
 
         anonymizer = PIIAnonymizer(strategy="synthetic", seed=seed)
         redactor = DocxRedactor(detector=detector, anonymizer=anonymizer)
 
-        # 5. Process redaction directly to in-memory output stream
-        out_stream = io.BytesIO()
-        redactor.redact_document(in_stream, out_stream)
-        out_stream.seek(0)
+        # 4. Redact document directly from temporary input path to temporary output path
+        try:
+            redactor.redact_document(temp_in_path, temp_out_path)
+        except (PackageNotFoundError, zipfile.BadZipFile, KeyError, ValueError) as e:
+            logger.warning(f"Malformed DOCX package rejected: {type(e).__name__}")
+            cleanup_temp_files(temp_in_path, temp_out_path)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The uploaded file is not a valid or readable .docx package."
+            )
+        except Exception as e:
+            logger.error(f"Document redaction error: {type(e).__name__}")
+            cleanup_temp_files(temp_in_path, temp_out_path)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An error occurred while processing the document."
+            )
 
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Document redaction error: {type(e).__name__}")
+        cleanup_temp_files(temp_in_path, temp_out_path)
+        logger.error(f"Unexpected API error: {type(e).__name__}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while processing the document."
         )
 
-    # 6. Stream back the redacted document
+    # 5. Schedule cleanup of temporary input and output files after response finishes
+    background_tasks.add_task(cleanup_temp_files, temp_in_path, temp_out_path)
+
+    # 6. Return the redacted document via FileResponse
     out_filename = f"redacted_{filename}" if filename else "redacted_document.docx"
-    return StreamingResponse(
-        out_stream,
+    return FileResponse(
+        path=temp_out_path,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={
-            "Content-Disposition": f'attachment; filename="{out_filename}"'
-        }
+        filename=out_filename,
+        background=background_tasks
     )
