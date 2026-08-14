@@ -297,7 +297,9 @@ ADDRESS_STRENGTH_KEYWORDS = [
     'flat', 'plot', 'house', 'building', 'office', 'unit', 'floor', 'tower',
     'road', 'street', 'avenue', 'lane', 'nagar', 'sector', 'block', 'village',
     'taluka', 'district', 'phase', 'park', 'registered office', 'correspondence address',
-    'mailing address', 'residential address', 'corporate office'
+    'mailing address', 'residential address', 'corporate office', 'registered address',
+    'address', 'st', 'rd', 'ave', 'blvd', 'dr', 'way', 'boulevard', 'drive',
+    'marg', 'chowk', 'circle', 'cross', 'crescent', 'gali'
 ]
 
 
@@ -372,6 +374,15 @@ class PIIDetector:
                 r'\b(?:Flat|Office|Plot|Tower|Building|House|No\.|Village|Taluka|District|Unit|Floor)'  # requires structural keyword
                 r'\s*[^,\n]{2,40},\s*[^,\n]{2,40}(?:,\s*[^,\n]{2,40})*,\s*[A-Za-z\s]{3,20}\s*[-–]?\s*\d{5,6}\b',
                 re.IGNORECASE
+            ),
+            "PHYSICAL_ADDRESS_STREET": re.compile(
+                r'(?:\b(?:Address|Mailing\s+Address|Registered\s+Address|Registered\s+Office|Corporate\s+Office|Postal\s+Address|Office\s+Address|Residential\s+Address|Work\s+Address|Contact\s+Address)[:\s]+)?'
+                r'\b\d{1,5}[A-Za-z]?(?:/\d+)?(?:\s*[-–]\s*\d+)?\s+(?:[A-Za-z0-9\.\'\-]+\s+){0,4}'
+                r'(?:Street|St|Road|Rd|Avenue|Ave|Lane|Ln|Boulevard|Blvd|Drive|Dr|Way|Marg|Chowk|Path|Highway|Expressway|Circle|Cross|Crescent|Gali)\b\.?'
+                r'(?:,\s*[^,\n]{2,35}){1,3}'
+                r'(?:[-–\s]+\d{3,6})?'
+                r'(?:,\s*[A-Za-z\s]{2,20})*',
+                re.IGNORECASE
             )
         }
 
@@ -444,7 +455,7 @@ class PIIDetector:
                     ):
                         continue
 
-                if cat == "PHYSICAL_ADDRESS_GENERIC":
+                if cat in ["PHYSICAL_ADDRESS_GENERIC", "PHYSICAL_ADDRESS_STREET"]:
                     # Require at least one strong address keyword in the match
                     lower_val = val.lower()
                     if not any(kw in lower_val for kw in ADDRESS_STRENGTH_KEYWORDS):
