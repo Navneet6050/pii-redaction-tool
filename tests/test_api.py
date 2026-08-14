@@ -25,6 +25,16 @@ class TestPIIRedactionAPI(unittest.TestCase):
     def setUpClass(cls):
         cls.client = TestClient(app)
 
+    def test_00_root_landing_page(self):
+        """GET / returns 200 HTML with self-explanatory landing page documentation."""
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/html", response.headers.get("content-type", ""))
+        self.assertIn("PII Redaction Service", response.text)
+        self.assertIn("/docs", response.text)
+        self.assertIn("/redact", response.text)
+        self.assertIn("Microsoft Word", response.text)
+
     def test_01_health_check(self):
         """GET /health returns 200 and expected metadata schema."""
         response = self.client.get("/health")
