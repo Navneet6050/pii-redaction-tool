@@ -963,10 +963,12 @@ class DocxRedactor:
         self.anonymizer = anonymizer
         self.redaction_stats = defaultdict(int)
         self.detected_summary = []
+        self._detection_cache: Dict[str, List[PIIEntity]] = {}
 
     def redact_document(self, input_path: str, output_path: str) -> Dict[str, Any]:
         """Processes the input document and writes redacted content to output_path."""
         start_time = time.time()
+        self._detection_cache = {}
         logger.info(f"Opening document: {input_path}")
         doc = docx.Document(input_path)
         self.doc = doc
@@ -1033,7 +1035,12 @@ class DocxRedactor:
         if not text or not text.strip():
             return
 
-        entities = self.detector.detect_pii(text)
+        if text in self._detection_cache:
+            entities = self._detection_cache[text]
+        else:
+            entities = self.detector.detect_pii(text)
+            self._detection_cache[text] = entities
+
         if not entities:
             return
 
