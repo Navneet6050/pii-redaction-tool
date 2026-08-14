@@ -1,0 +1,41 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.swp
+
+# Output logs & temporary debug scratch
+*.log
+scratch/
+.system_generated/
+
+# Submission/package artifacts
+submission/
+PII_Redaction_Tool_Submission.zip
+
+# Original source document contains PII
+Red Herring Prospectus.docx
+
+# Internal evaluation artifacts containing source PII
+ground_truth.json
+redaction_report.json
+
+# Development-only evaluation diagnostics
+evaluation/diagnostic_analysis.py
+evaluation/failure_analysis.md
+evaluation/failure_raw.json
+
+# Obsolete root-level evaluation artifacts
+evaluation_report.md
+evaluation_summary.json
