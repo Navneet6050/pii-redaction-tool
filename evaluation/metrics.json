@@ -1,0 +1,370 @@
+{
+  "real_document_generic_mode": {
+    "per_category": [
+      {
+        "category": "FULL_NAME",
+        "tp": 281,
+        "fp": 0,
+        "fn": 103,
+        "support": 384,
+        "precision": 1.0,
+        "recall": 0.7318,
+        "f1_score": 0.8451
+      },
+      {
+        "category": "EMAIL_ADDRESS",
+        "tp": 70,
+        "fp": 0,
+        "fn": 0,
+        "support": 70,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      {
+        "category": "PHONE_NUMBER",
+        "tp": 27,
+        "fp": 0,
+        "fn": 19,
+        "support": 46,
+        "precision": 1.0,
+        "recall": 0.587,
+        "f1_score": 0.7397
+      },
+      {
+        "category": "COMPANY_NAME",
+        "tp": 130,
+        "fp": 0,
+        "fn": 3,
+        "support": 133,
+        "precision": 1.0,
+        "recall": 0.9774,
+        "f1_score": 0.9886
+      },
+      {
+        "category": "PHYSICAL_ADDRESS",
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "support": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      {
+        "category": "SSN",
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "support": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      {
+        "category": "CREDIT_CARD",
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "support": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      {
+        "category": "DATE_OF_BIRTH",
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "support": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      {
+        "category": "IP_ADDRESS",
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "support": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      }
+    ],
+    "micro_precision": 1.0,
+    "micro_recall": 0.8025,
+    "micro_f1": 0.8904,
+    "macro_precision": 1.0,
+    "macro_recall": 0.9218,
+    "macro_f1": 0.9526,
+    "total_tp": 508,
+    "total_fp": 0,
+    "total_fn": 125,
+    "total_support": 633
+  },
+  "real_document_domain_assisted_mode": {
+    "per_category": [
+      {
+        "category": "FULL_NAME",
+        "tp": 354,
+        "fp": 0,
+        "fn": 30,
+        "support": 384,
+        "precision": 1.0,
+        "recall": 0.9219,
+        "f1_score": 0.9593
+      },
+      {
+        "category": "EMAIL_ADDRESS",
+        "tp": 70,
+        "fp": 0,
+        "fn": 0,
+        "support": 70,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      {
+        "category": "PHONE_NUMBER",
+        "tp": 27,
+        "fp": 0,
+        "fn": 19,
+        "support": 46,
+        "precision": 1.0,
+        "recall": 0.587,
+        "f1_score": 0.7397
+      },
+      {
+        "category": "COMPANY_NAME",
+        "tp": 133,
+        "fp": 0,
+        "fn": 0,
+        "support": 133,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      {
+        "category": "PHYSICAL_ADDRESS",
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "support": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      {
+        "category": "SSN",
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "support": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      {
+        "category": "CREDIT_CARD",
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "support": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      {
+        "category": "DATE_OF_BIRTH",
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "support": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      {
+        "category": "IP_ADDRESS",
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "support": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      }
+    ],
+    "micro_precision": 1.0,
+    "micro_recall": 0.9226,
+    "micro_f1": 0.9597,
+    "macro_precision": 1.0,
+    "macro_recall": 0.9454,
+    "macro_f1": 0.9666,
+    "total_tp": 584,
+    "total_fp": 0,
+    "total_fn": 49,
+    "total_support": 633
+  },
+  "synthetic_benchmark": {
+    "positive_benchmark": {
+      "total_support": 180,
+      "total_tp": 177,
+      "total_fn": 3,
+      "overall_recall": 0.9833,
+      "by_category": {
+        "FULL_NAME": {
+          "support": 20,
+          "tp": 18,
+          "fn": 2,
+          "recall": 0.9
+        },
+        "EMAIL_ADDRESS": {
+          "support": 20,
+          "tp": 20,
+          "fn": 0,
+          "recall": 1.0
+        },
+        "PHONE_NUMBER": {
+          "support": 20,
+          "tp": 20,
+          "fn": 0,
+          "recall": 1.0
+        },
+        "COMPANY_NAME": {
+          "support": 20,
+          "tp": 20,
+          "fn": 0,
+          "recall": 1.0
+        },
+        "PHYSICAL_ADDRESS": {
+          "support": 20,
+          "tp": 20,
+          "fn": 0,
+          "recall": 1.0
+        },
+        "SSN": {
+          "support": 20,
+          "tp": 20,
+          "fn": 0,
+          "recall": 1.0
+        },
+        "CREDIT_CARD": {
+          "support": 20,
+          "tp": 19,
+          "fn": 1,
+          "recall": 0.95
+        },
+        "DATE_OF_BIRTH": {
+          "support": 20,
+          "tp": 20,
+          "fn": 0,
+          "recall": 1.0
+        },
+        "IP_ADDRESS": {
+          "support": 20,
+          "tp": 20,
+          "fn": 0,
+          "recall": 1.0
+        }
+      }
+    },
+    "clear_negative_benchmark": {
+      "total_support": 180,
+      "total_tn": 144,
+      "total_fp": 36,
+      "overall_specificity": 0.8,
+      "by_category": {
+        "FULL_NAME": {
+          "support": 20,
+          "tn": 20,
+          "fp": 0,
+          "specificity": 1.0
+        },
+        "EMAIL_ADDRESS": {
+          "support": 20,
+          "tn": 17,
+          "fp": 3,
+          "specificity": 0.85
+        },
+        "PHONE_NUMBER": {
+          "support": 20,
+          "tn": 17,
+          "fp": 3,
+          "specificity": 0.85
+        },
+        "COMPANY_NAME": {
+          "support": 20,
+          "tn": 18,
+          "fp": 2,
+          "specificity": 0.9
+        },
+        "PHYSICAL_ADDRESS": {
+          "support": 20,
+          "tn": 15,
+          "fp": 5,
+          "specificity": 0.75
+        },
+        "SSN": {
+          "support": 20,
+          "tn": 10,
+          "fp": 10,
+          "specificity": 0.5
+        },
+        "CREDIT_CARD": {
+          "support": 20,
+          "tn": 17,
+          "fp": 3,
+          "specificity": 0.85
+        },
+        "DATE_OF_BIRTH": {
+          "support": 20,
+          "tn": 19,
+          "fp": 1,
+          "specificity": 0.95
+        },
+        "IP_ADDRESS": {
+          "support": 20,
+          "tn": 11,
+          "fp": 9,
+          "specificity": 0.55
+        }
+      }
+    },
+    "ambiguous_negative_benchmark": {
+      "total_support": 32,
+      "note": "Adversarial/borderline cases \u2014 excluded from primary specificity metrics",
+      "by_category": {
+        "SSN": {
+          "support": 12,
+          "detector_fired": 8,
+          "detector_quiet": 4,
+          "fire_rate": 0.6667,
+          "note": "Adversarial cases \u2014 excluded from primary specificity metrics"
+        },
+        "CREDIT_CARD": {
+          "support": 8,
+          "detector_fired": 2,
+          "detector_quiet": 6,
+          "fire_rate": 0.25,
+          "note": "Adversarial cases \u2014 excluded from primary specificity metrics"
+        },
+        "IP_ADDRESS": {
+          "support": 4,
+          "detector_fired": 3,
+          "detector_quiet": 1,
+          "fire_rate": 0.75,
+          "note": "Adversarial cases \u2014 excluded from primary specificity metrics"
+        },
+        "PHYSICAL_ADDRESS": {
+          "support": 8,
+          "detector_fired": 3,
+          "detector_quiet": 5,
+          "fire_rate": 0.375,
+          "note": "Adversarial cases \u2014 excluded from primary specificity metrics"
+        }
+      }
+    }
+  }
+}
